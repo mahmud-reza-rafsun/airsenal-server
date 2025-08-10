@@ -56,6 +56,7 @@ async function run() {
         await client.connect();
         // all collcetions
         const userCollcetions = client.db('AIrsenal').collection('users');
+        const productCollcetions = client.db('AIrsenal').collection('products');
 
         // jwt authenication
         app.post('/jwt', async (req, res) => {
@@ -94,6 +95,18 @@ async function run() {
                 return res.send(isExist);
             }
             const result = await userCollcetions.insertOne({ ...user, role: 'Customer' });
+            res.send(result);
+        })
+
+        // add product
+        app.post('/add-product', verifyToken, async (req, res) => {
+            const data = req.body;
+            const result = await productCollcetions.insertOne(data);
+            res.send(result);
+        });
+        // get all product
+        app.get('/get-product', async (req, res) => {
+            const result = await productCollcetions.find().toArray();
             res.send(result);
         })
 
