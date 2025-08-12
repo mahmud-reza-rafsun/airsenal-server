@@ -4,7 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 
 // middleware
@@ -106,11 +106,57 @@ async function run() {
         });
         // get all product
         app.get('/get-product', async (req, res) => {
-            const result = await productCollcetions.find().toArray();
+            const result = await productCollcetions.find().sort({ _id: -1 }).toArray();
+            res.send(result);
+        })
+        // delete product in db
+
+        app.delete('/get-product/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await productCollcetions.deleteOne(query);
+            res.send(result);
+        })
+        // get spesific data 
+        app.get('/get-product/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await productCollcetions.findOne(query);
+            res.send(result);
+        });
+
+        // update data in db
+        app.patch('/update-product/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const query = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: data
+            }
+            const result = await productCollcetions.updateOne(query, updateDoc);
             res.send(result);
         })
 
-
+        // vote update
+        app.patch('/vote/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $inc: { votes: 1 }
+            }
+            const result = await productCollcetions.updateOne(query, updateDoc);
+            res.send(result);
+        })
+        // trending data by vote
+        app.get('/trending', async (req, res) => {
+            try {
+                const result = await productCollcetions.find().sort({ votes: -1 }).limit(6).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send({ error: "Internal Server Error" });
+            }
+        })
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
