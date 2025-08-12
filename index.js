@@ -157,6 +157,23 @@ async function run() {
                 res.status(500).send({ error: "Internal Server Error" });
             }
         })
+
+        // get all products
+
+        app.get('/all-products', async (req, res) => {
+            const search = req.query.search || '';
+            let query = {};
+            if (search) {
+                query = {
+                    newTag: { $elemMatch: { $regex: search, $options: 'i' } }
+                }
+            }
+            const result = await productCollcetions.find(query).toArray();
+            res.send(result);
+        })
+
+
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
