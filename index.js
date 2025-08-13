@@ -57,6 +57,7 @@ async function run() {
         // all collcetions
         const userCollcetions = client.db('AIrsenal').collection('users');
         const productCollcetions = client.db('AIrsenal').collection('products');
+        const reportCollcetions = client.db('AIrsenal').collection('reports');
 
         // jwt authenication
         app.post('/jwt', async (req, res) => {
@@ -94,7 +95,7 @@ async function run() {
             if (isExist) {
                 return res.send(isExist);
             }
-            const result = await userCollcetions.insertOne({ ...user, role: 'Customer' });
+            const result = await userCollcetions.insertOne({ ...user, role: 'User' });
             res.send(result);
         })
 
@@ -117,7 +118,7 @@ async function run() {
             const result = await productCollcetions.deleteOne(query);
             res.send(result);
         })
-        // get spesific data 
+        // get specific data 
         app.get('/get-product/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -169,6 +170,13 @@ async function run() {
             const result = await productCollcetions.updateOne(query, updateDoc);
             res.send(result);
         })
+        // reivew single product details
+        app.get('/review-products/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await productCollcetions.findOne(query);
+            res.send(result);
+        });
 
         // vote update
         app.patch('/vote/:id', async (req, res) => {
@@ -183,7 +191,7 @@ async function run() {
         // trending data by vote
         app.get('/trending', async (req, res) => {
             try {
-                const result = await productCollcetions.find().sort({ votes: -1 }).limit(6).toArray();
+                const result = await productCollcetions.find({ status: "Accepted" }).sort({ votes: -1 }).limit(6).toArray();
                 res.send(result);
             } catch (error) {
                 console.error(error);
@@ -204,6 +212,27 @@ async function run() {
             const result = await productCollcetions.find(query).toArray();
             res.send(result);
         });
+
+        // reported apis
+        app.post('/reported-content', async (req, res) => {
+            const report = req.body;
+            const result = await reportCollcetions.insertOne(report);
+            res.send(result);
+        });
+        // get all reports
+        app.get('/get-report/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { 'owner.email': email };
+            const result = await reportCollcetions.find(query).toArray();
+            res.send(result);
+        });
+        // delete reported content
+        app.delete('/delete-content/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const productDelete = await productCollcetions.deleteOne({ _id: new ObjectId(id) });
+            const reportDelete = await reportCollcetions.deleteOne({ reportId: id });
+            res.send({ productDelete, reportDelete, message: 'Product & Report deleted successfully' });
+        })
 
 
 
