@@ -124,6 +124,13 @@ async function run() {
             const result = await productCollcetions.findOne(query);
             res.send(result);
         });
+        // get my product data from db
+        app.get('/my-products/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const query = { 'owner.email': email };
+            const result = await productCollcetions.find(query).toArray();
+            res.send(result);
+        })
 
         // update data in db
         app.patch('/update-product/:id', verifyToken, async (req, res) => {
@@ -132,6 +139,32 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const updateDoc = {
                 $set: data
+            }
+            const result = await productCollcetions.updateOne(query, updateDoc);
+            res.send(result);
+        });
+        // get public aprove product
+        app.get('/approve-products', async (req, res) => {
+            const result = await productCollcetions.find({ status: "Accepted" }).toArray();;
+            res.send(result);
+        });
+        // approve post by moderator 
+        app.patch('/approve-products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: { status: "Accepted" }
+            }
+            const result = await productCollcetions.updateOne(query, updateDoc);
+            res.send(result);
+        })
+
+        // rejected post by moderator
+        app.patch('/rejected-products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: { status: "Rejected" }
             }
             const result = await productCollcetions.updateOne(query, updateDoc);
             res.send(result);
@@ -170,7 +203,8 @@ async function run() {
             }
             const result = await productCollcetions.find(query).toArray();
             res.send(result);
-        })
+        });
+
 
 
 
