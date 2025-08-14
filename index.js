@@ -59,6 +59,27 @@ async function run() {
         const productCollcetions = client.db('AIrsenal').collection('products');
         const reportCollcetions = client.db('AIrsenal').collection('reports');
 
+        // verifyAdmin
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.params.email;
+            const query = { email };
+            const result = await userCollcetions.findOne(query);
+            if (!result || result.role !== "Admin") {
+                return res.status(403).send({ message: "Forbidden Access! Admin Only Actions!" })
+            }
+            next();
+        }
+        // verifyModerator
+        const verifyModerator = async (req, res, next) => {
+            const email = req.params.email;
+            const query = { email };
+            const result = await userCollcetions.findOne(query)
+            if (!result || result.role === "Moderator") {
+                return res.status(403).send({ message: 'Forbidden Access! Admin Only Actions!' });
+            }
+            next();
+        }
+
         // jwt authenication
         app.post('/jwt', async (req, res) => {
             const body = req.body;
@@ -96,6 +117,40 @@ async function run() {
                 return res.send(isExist);
             }
             const result = await userCollcetions.insertOne({ ...user, role: 'User' });
+            res.send(result);
+        })
+
+        // role
+        app.get('/users/role/:email', async (req, res) => {
+            const email = req.params.email;
+            const result = await userCollcetions.findOne({ email })
+            res.send({ role: result?.role })
+        })
+        // get all users
+        app.get('/get-users/:email', verifyToken, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const query = { email: { $ne: email } }
+            const result = await userCollcetions.find(query).toArray();
+            res.send(result);
+        })
+        // make admin 
+        app.patch('/users/admin/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: { role: "Admin" }
+            }
+            const result = await userCollcetions.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+        // make moderator 
+        app.patch('/users/moderator/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: { role: "Moderator" }
+            }
+            const result = await userCollcetions.updateOne(filter, updateDoc);
             res.send(result);
         })
 
@@ -232,6 +287,13 @@ async function run() {
             const productDelete = await productCollcetions.deleteOne({ _id: new ObjectId(id) });
             const reportDelete = await reportCollcetions.deleteOne({ reportId: id });
             res.send({ productDelete, reportDelete, message: 'Product & Report deleted successfully' });
+        })
+        // get report specfic data
+        app.get('/report-details/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await reportCollcetions.findOne(query);
+            res.send(result);
         })
 
 
