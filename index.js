@@ -283,7 +283,27 @@ async function run() {
             const result = await reportCollcetions.findOne(query);
             res.send(result);
         })
+        // statistics API
+        app.get('/statistics', async (req, res) => {
+            const product = await productCollcetions.countDocuments();
+            const acceptedProduct = await productCollcetions.countDocuments({ status: "Accepted" });
+            const rejectedProduct = await productCollcetions.countDocuments({ status: "Rejected" });
+            const pendingProduct = await productCollcetions.countDocuments({ status: "pending" });
 
+            const totalReview = acceptedProduct + rejectedProduct + pendingProduct;
+
+            const totalUsers = await userCollcetions.countDocuments();
+
+            res.send({
+                product: product,
+                acceptedProduct: acceptedProduct,
+                pendingProduct: pendingProduct,
+                rejectedProduct: rejectedProduct,
+                totalReview: totalReview,
+                totalUsers: totalUsers
+            });
+
+        })
 
 
 
