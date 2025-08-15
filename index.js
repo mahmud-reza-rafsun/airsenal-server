@@ -59,6 +59,7 @@ async function run() {
         const userCollcetions = client.db('AIrsenal').collection('users');
         const productCollcetions = client.db('AIrsenal').collection('products');
         const reportCollcetions = client.db('AIrsenal').collection('reports');
+        const couponCollcetions = client.db('AIrsenal').collection('coupons');
 
 
         // jwt authenication
@@ -303,6 +304,50 @@ async function run() {
                 totalUsers: totalUsers
             });
 
+        });
+
+        // post coupon in db
+        app.post('/add-coupon/:code', verifyToken, async (req, res) => {
+            const code = req.params.code;
+            const query = { code };
+            const data = req.body;
+            const isExist = await couponCollcetions.findOne(query);
+            if (isExist) {
+                return res.send({ isExist })
+            }
+            const result = await couponCollcetions.insertOne(data);
+            res.send(result);
+        })
+
+        // get all coupon in db
+        app.get('/get-coupon', verifyToken, async (req, res) => {
+            const result = await couponCollcetions.find().toArray();
+            res.send(result);
+        })
+        // delete coupon
+        app.delete('/coupon/delete/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await couponCollcetions.deleteOne(query);
+            res.send(result);
+        });
+        // get specific data 
+        app.get('/get-coupon/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await couponCollcetions.findOne(query);
+            res.send(result);
+        })
+        // update coupon data
+        app.patch('/update-coupon/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const data = req.body;
+            const updateDoc = {
+                $set: data
+            }
+            const result = await couponCollcetions.updateOne(filter, updateDoc);
+            res.send(result);
         })
 
 
