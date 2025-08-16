@@ -100,7 +100,7 @@ async function run() {
             }
             const result = await userCollcetions.insertOne({ ...user, role: 'User' });
             res.send(result);
-        })
+        });
 
         // role
         app.get('/users/role/:email', async (req, res) => {
@@ -313,7 +313,7 @@ async function run() {
             const data = req.body;
             const isExist = await couponCollcetions.findOne(query);
             if (isExist) {
-                return res.send({ isExist })
+                return res.status(400).send({ message: 'Coupon already exists' });
             }
             const result = await couponCollcetions.insertOne(data);
             res.send(result);
