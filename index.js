@@ -10,7 +10,7 @@ const app = express();
 // middleware
 const imageAPI = process.env.VITE_IMAGE_API;
 const corsOptions = {
-    origin: ['http://localhost:5173', `https://api.imgbb.com/1/upload?key=${imageAPI}`],
+    origin: ['https://airsenal-client.vercel.app', `https://api.imgbb.com/1/upload?key=${imageAPI}`],
     credentials: true,
     optionSuccessStatus: 200,
 }
